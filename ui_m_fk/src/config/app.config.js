@@ -58,13 +58,10 @@ export const appConfig = {
   // BFF URL
   bffUrl: import.meta.env.VITE_BFF_URL,
   
-  // API Key для BFF
-  bffApiKey: import.meta.env.VITE_BFF_API_KEY,
-  
   // Настройки родительского приложения
   parent: {
     // Ожидаемый origin родителя (для postMessage)
-    origin: import.meta.env.VITE_PARENT_ORIGIN || 'http://localhost:3000',
+    origin: import.meta.env.VITE_PARENT_ORIGIN,
     // Время ожидания ответа от родителя (мс)
     timeout: 10000,
     // Автоматически запрашивать авторизацию у родителя

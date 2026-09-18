@@ -3,10 +3,7 @@
 # ============================================
 server:
   port: ${SERVER_PORT}
-
-spring:
-  config:
-    import: optional:file:.env[.properties]
+  forward-headers-strategy: framework
 
   # Отключаем стандартную аутентификацию Spring Security
   security:
@@ -36,8 +33,6 @@ spring:
         shutdown-timeout: 100ms
       repositories:
         enabled: false  # Отключаем Spring Data Redis репозитории
-
-
 
 # ============================================
 # APPLICATION SETTINGS
@@ -70,8 +65,6 @@ app:
   cors:
     allowed-origins: ${CORS_ORIGINS}
     max-age: 3600
-
-
 
 # ============================================
 # LOGGING

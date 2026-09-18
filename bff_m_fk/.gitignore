@@ -33,4 +33,6 @@ build/
 .vscode/
 
 .env
+.p_kk.env
+.docker-compose.p_kk.yml
 

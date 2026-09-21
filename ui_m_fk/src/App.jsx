@@ -4,9 +4,13 @@ import { AuthProvider } from './contexts/AuthContext';
 import AuthGuard from './components/auth/AuthGuard';
 import AppLayout from './components/layout/AppLayout';
 
+// VITE_APP_BASE='/pkk/' → basename='/pkk' (без слэша на конце — требование React Router)
+const BASE = import.meta.env.VITE_APP_BASE || '/';
+const basename = BASE === '/' ? undefined : BASE.replace(/\/$/, '');
+
 function App() {
   return (
-    <Router>
+    <Router basename={basename}>
       <AuthProvider>
         <Routes>
           {/* Редирект с корня */}

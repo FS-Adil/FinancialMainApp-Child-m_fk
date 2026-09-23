@@ -50,6 +50,9 @@ app:
     ttl-minutes: ${SESSION_TTL}
     max-concurrent-sessions: 5
 
+  auth-service:
+    internal-api-key: ${INTERNAL_API_KEY}
+
   # URL микросервисов
   services:
     auth-service:

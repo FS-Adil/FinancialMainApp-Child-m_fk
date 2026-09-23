@@ -1,269 +1,7 @@
 // // // authService.js
 import bffApi, { tokenManager } from '../api/bffApi';
-// // import { SecurityUtils } from '../utils/security';
 
-// // /**
-// //  * Сервис аутентификации
-// //  */
-// // class AuthService {
-// //   /**
-// //    * Вход по email и паролю
-// //    */
-// //   async login(email, password) {
-// //     try {
-// //       const sanitizedEmail = SecurityUtils.validateEmail(email);
-// //       if (!sanitizedEmail) {
-// //         return { 
-// //           success: false, 
-// //           error: 'Некорректный формат email' 
-// //         };
-// //       }
-
-// //       const response = await bffApi.post('/api/auth/login', {
-// //         email: sanitizedEmail,
-// //         password: password
-// //       });
-
-// //       console.log('🔑 Login response:', response.data);
-
-// //       // Проверяем, что ответ содержит необходимые данные
-// //       if (!response.data?.user) {
-// //         console.error('❌ No user data in response');
-// //         return {
-// //           success: false,
-// //           error: 'Ошибка входа. Нет данных пользователя.'
-// //         };
-// //       }
-
-// //       // Сохраняем данные пользователя
-// //       tokenManager.saveUserData(response.data.user, response.data.organization);
-
-// //       return {
-// //         success: true,
-// //         user: response.data.user,
-// //         organization: response.data.organization
-// //       };
-
-// //     } catch (error) {
-// //       console.error('❌ Login error:', error);
-// //       return {
-// //         success: false,
-// //         error: error.response?.data?.error || 'Ошибка входа. Проверьте данные.'
-// //       };
-// //     }
-// //   }
-
-// //   /**
-// //    * Авторизация через родительское приложение
-// //    */
-// //   async loginViaParent(parentToken) {
-// //     try {
-// //       const response = await bffApi.post('/api/auth/parent-session', {
-// //         parentToken: parentToken
-// //       });
-
-// //       if (!response.data?.user) {
-// //         return {
-// //           success: false,
-// //           error: 'Ошибка авторизации. Нет данных пользователя.'
-// //         };
-// //       }
-
-// //       tokenManager.saveUserData(response.data.user, response.data.organization);
-
-// //       return {
-// //         success: true,
-// //         user: response.data.user,
-// //         organization: response.data.organization
-// //       };
-
-// //     } catch (error) {
-// //       return {
-// //         success: false,
-// //         error: 'Не удалось авторизоваться через родительское приложение'
-// //       };
-// //     }
-// //   }
-
-// //   /**
-// //    * Проверка текущей сессии
-// //    */
-// //   async checkSession() {
-// //     try {
-// //       const response = await bffApi.get('/api/auth/me');
-      
-// //       if (response.data?.user) {
-// //         tokenManager.saveUserData(response.data.user, response.data.organization);
-        
-// //         return {
-// //           success: true,
-// //           user: response.data.user,
-// //           organization: response.data.organization
-// //         };
-// //       }
-      
-// //       return {
-// //         success: false,
-// //         user: null,
-// //         organization: null
-// //       };
-
-// //     } catch (error) {
-// //       console.error('❌ Session check error:', error);
-// //       return {
-// //         success: false,
-// //         user: null,
-// //         organization: null
-// //       };
-// //     }
-// //   }
-
-// //   /**
-// //    * Выход из системы
-// //    */
-// //   async logout() {
-// //     try {
-// //       await bffApi.post('/api/auth/logout');
-// //     } catch (error) {
-// //       console.error('Logout error:', error);
-// //     }
-    
-// //     tokenManager.clearUserData();
-    
-// //     return { success: true };
-// //   }
-// // }
-
-// // export default new AuthService();
-
-// // authService.js
-// import axios from 'axios';
-// // import { bffApi } from './bffApi';
-// import appConfig from '../config/app.config';
-
-// class AuthService {
-//   constructor() {
-//     this.token = null;
-//   }
-
-//   /**
-//    * Установка токена
-//    */
-//   setToken(token) {
-//     this.token = token;
-//     console.log('🔑 Токен установлен в authService');
-    
-//     // Устанавливаем заголовок Authorization для будущих запросов
-//     if (token) {
-//       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-//     } else {
-//       delete axios.defaults.headers.common['Authorization'];
-//     }
-//   }
-
-//   /**
-//    * Проверка, нужно ли ждать авторизацию от родителя
-//    */
-//   shouldWaitForParentAuth() {
-//     const inIframe = window.parent !== window;
-//     const waitForParent = appConfig.authConfig?.waitForParentAuth !== false;
-//     return inIframe && waitForParent;
-//   }
-
-//   /**
-//    * Проверка сессии
-//    */
-//   async checkSession() {
-//     // ВАЖНО: Если мы в iframe и должны ждать родителя, не делаем запрос
-//     if (this.shouldWaitForParentAuth()) {
-//       console.log('⏭️ Пропускаем проверку сессии, ждем данные от родителя');
-//       return { success: false, skip: true };
-//     }
-    
-//     try {
-//       const response = await bffApi.get('/api/auth/me');
-//       return {
-//         success: true,
-//         user: response.data.user,
-//         organization: response.data.organization
-//       };
-//     } catch (error) {
-//       if (error.response?.status === 401) {
-//         return { success: false };
-//       }
-//       throw error;
-//     }
-//   }
-
-//   /**
-//    * Вход в систему
-//    */
-//   async login(email, password) {
-//     try {
-//       const response = await bffApi.post('/api/auth/login', { email, password });
-      
-//       if (response.data.token) {
-//         this.setToken(response.data.token);
-//       }
-      
-//       return {
-//         success: true,
-//         user: response.data.user,
-//         organization: response.data.organization
-//       };
-//     } catch (error) {
-//       return {
-//         success: false,
-//         error: error.response?.data?.message || 'Ошибка входа'
-//       };
-//     }
-//   }
-
-//   /**
-//    * Вход через родителя
-//    */
-//   async loginViaParent(token) {
-//     try {
-//       this.setToken(token);
-      
-//       const response = await bffApi.get('/api/auth/me', {
-//         headers: {
-//           'Authorization': `Bearer ${token}`
-//         }
-//       });
-      
-//       return {
-//         success: true,
-//         user: response.data.user,
-//         organization: response.data.organization
-//       };
-//     } catch (error) {
-//       console.warn('BFF login via parent failed:', error);
-//       return { success: false };
-//     }
-//   }
-
-//   /**
-//    * Выход из системы
-//    */
-//   async logout() {
-//     try {
-//       if (!this.shouldWaitForParentAuth()) {
-//         await bffApi.post('/api/auth/logout');
-//       }
-//     } finally {
-//       this.setToken(null);
-//       localStorage.removeItem('auth_token');
-//       document.cookie = 'access_token=; path=/; max-age=0';
-//     }
-//   }
-// }
-
-// export default new AuthService();
-
-// authService.js
 import axios from 'axios';
-// import { bffApi } from './bffApi';
 import appConfig from '../config/app.config';
 
 class AuthService {
@@ -277,17 +15,15 @@ class AuthService {
    */
   setToken(token) {
     this.token = token;
-    
     if (appConfig.debug.logAuth) {
       console.log('🔑 Токен установлен в authService');
     }
-    
-    // Устанавливаем заголовок Authorization для будущих запросов
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      tokenManager.setToken(token);   // ← пишем в bffApi
     } else {
-      delete axios.defaults.headers.common['Authorization'];
+      tokenManager.clearUserData();
     }
+    // УБРАЛИ axios.defaults.headers.common — он ломает другие API
   }
 
   /**
@@ -335,11 +71,12 @@ class AuthService {
     // Если у нас есть токен от родителя, используем его
     if (this.token) {
       try {
-        const response = await bffApi.get('/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${this.token}`
-          }
-        });
+        const response = await bffApi.get('/api/auth/me');
+        // const response = await bffApi.get('/api/auth/me', {
+        //   headers: {
+        //     'Authorization': `Bearer ${this.token}`
+        //   }
+        // });
         
         return {
           success: true,
@@ -375,27 +112,10 @@ class AuthService {
   /**
    * Сохранение токена от родителя
    */
-  saveTokenFromParent(token) {
-    if (!token) return;
-    
-    // Сохраняем в localStorage
-    localStorage.setItem(appConfig.authConfig.tokenKey, token);
-    
-    // Устанавливаем куку
-    const cookieOptions = [
-      `path=${appConfig.authConfig.cookiePath || '/'}`,
-      `max-age=${appConfig.authConfig.cookieMaxAge || 900}`,
-      `SameSite=${appConfig.authConfig.cookieSameSite || 'Lax'}`
-    ].join('; ');
-    
-    document.cookie = `${appConfig.authConfig.cookieName}=${token}; ${cookieOptions}`;
-    
-    // Устанавливаем токен в сервисе
-    this.setToken(token);
-    
-    if (appConfig.debug.logAuth) {
-      console.log('💾 Токен от родителя сохранен');
-    }
+  saveTokenFromParent(sessionId) {
+    // Никаких localStorage и document.cookie.
+    // BFF-сессия живёт только в памяти (window.__BFF_USER_DATA__).
+    this.setToken(sessionId);
   }
 
   /**
@@ -440,24 +160,29 @@ class AuthService {
   /**
    * Вход через родителя
    */
-  async loginViaParent(token) {
+  async loginViaParent(parentJwt) {
     try {
-      this.saveTokenFromParent(token);
-      
-      const response = await bffApi.get('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // 1. Обмен JWT родителя на BFF-сессию
+      const res = await bffApi.post('/api/auth/parent-session', {
+        parentToken: parentJwt
       });
-      
+
+      if (!res.data?.token) {
+        throw new Error('BFF не вернул session token');
+      }
+
+      // 2. Сохраняем sessionId (НЕ JWT!) — он уйдёт в window.__BFF_USER_DATA__
+      this.setToken(res.data.token);
+      tokenManager.saveUserData(res.data.user, res.data.organization);
+
       return {
         success: true,
-        user: response.data.user,
-        organization: response.data.organization
+        user: res.data.user,
+        organization: res.data.organization
       };
     } catch (error) {
       console.warn('BFF login via parent failed:', error);
-      return { success: false };
+      return { success: false, error: error.message };
     }
   }
 

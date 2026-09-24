@@ -1,274 +1,3 @@
-// // import { useState, useEffect, useCallback } from 'react';
-// // import { useSecurePostMessage } from './useSecurePostMessage';
-// // import authService from '../services/authService';
-// // import appConfig from '../config/app.config';
-
-// // /**
-// //  * Хук для авторизации через родительское приложение
-// //  * 
-// //  * Решает проблемы:
-// //  * 1. Обнаружение, что приложение в iframe
-// //  * 2. Запрос токена у родителя через postMessage
-// //  * 3. Автоматический вход при получении токена
-// //  * 
-// //  * @returns {{ isInParent: boolean, parentAuthLoading: boolean, parentAuthError: string|null }}
-// //  */
-// // export const useParentAuth = () => {
-// //   const [isInParent, setIsInParent] = useState(false);
-// //   const [parentAuthLoading, setParentAuthLoading] = useState(true);
-// //   const [parentAuthError, setParentAuthError] = useState(null);
-
-// //   const { sendToParent, onParentMessage } = useSecurePostMessage({
-// //     parentOrigin: appConfig.parent.origin // Origin родительского приложения
-// //   });
-
-// //   /**
-// //    * Проверка, находимся ли мы в iframe родителя
-// //    */
-// //   useEffect(() => {
-// //     const inIframe = window.parent !== window;
-// //     setIsInParent(inIframe);
-    
-// //     if (inIframe) {
-// //       // Отправляем сообщение о готовности родителю
-// //       sendToParent({ type: 'CHILD_READY' });
-// //     } else {
-// //       setParentAuthLoading(false);
-// //     }
-// //   }, [sendToParent]);
-
-// //   /**
-// //    * Обработка сообщений от родителя
-// //    */
-// //   useEffect(() => {
-// //     if (!isInParent) return;
-
-// //     const cleanup = onParentMessage(async (data, origin) => {
-// //       // Обрабатываем токен от родителя
-// //       if (data.type === 'PARENT_AUTH_TOKEN') {
-// //         try {
-// //           setParentAuthLoading(true);
-          
-// //           // Пытаемся авторизоваться через BFF
-// //           const result = await authService.loginViaParent(data.token);
-          
-// //           if (result.success) {
-// //             // Успешная авторизация - оповещаем приложение
-// //             window.dispatchEvent(new CustomEvent('auth:login', { 
-// //               detail: { user: result.user, organization: result.organization }
-// //             }));
-// //           } else {
-// //             setParentAuthError(result.error);
-// //           }
-// //         } catch (error) {
-// //           setParentAuthError('Ошибка авторизации через родителя');
-// //         } finally {
-// //           setParentAuthLoading(false);
-// //         }
-// //       }
-      
-// //       // Родитель запрашивает статус
-// //       if (data.type === 'PARENT_STATUS_REQUEST') {
-// //         sendToParent({ 
-// //           type: 'CHILD_STATUS', 
-// //           status: 'ready',
-// //           app: 'cost-calculation'
-// //         });
-// //       }
-// //     });
-
-// //     return cleanup;
-// //   }, [isInParent, sendToParent, onParentMessage]);
-
-// //   return {
-// //     isInParent,
-// //     parentAuthLoading,
-// //     parentAuthError
-// //   };
-// // };
-
-
-// // useParentAuth.js
-// import { useState, useEffect, useCallback, useRef } from 'react';
-// import { useSecurePostMessage } from './useSecurePostMessage';
-// import authService from '../services/authService';
-// import appConfig from '../config/app.config';
-
-// /**
-//  * Хук для авторизации через родительское приложение
-//  * 
-//  * Решает проблемы:
-//  * 1. Обнаружение, что приложение в iframe
-//  * 2. Запрос токена у родителя через postMessage
-//  * 3. Автоматический вход при получении токена
-//  * 4. Обработка повторных запросов авторизации
-//  * 
-//  * @returns {{ isInParent: boolean, parentAuthLoading: boolean, parentAuthError: string|null, authData: Object|null }}
-//  */
-// export const useParentAuth = () => {
-//   const [isInParent, setIsInParent] = useState(false);
-//   const [parentAuthLoading, setParentAuthLoading] = useState(true);
-//   const [parentAuthError, setParentAuthError] = useState(null);
-//   const [authData, setAuthData] = useState(null);
-//   const authRequestedRef = useRef(false);
-
-//   const { sendToParent, onParentMessage } = useSecurePostMessage({
-//     parentOrigin: appConfig.parent.origin // Origin родительского приложения
-//   });
-
-//   /**
-//    * Проверка, находимся ли мы в iframe родителя
-//    */
-//   useEffect(() => {
-//     const inIframe = window.parent !== window;
-//     setIsInParent(inIframe);
-    
-//     if (inIframe) {
-//       console.log('📦 Приложение запущено в iframe родителя');
-      
-//       // Отправляем сообщение о готовности родителю
-//       const readyMessage = { 
-//         type: 'CHILD_READY',
-//         app: appConfig.id || 'unknown-app',
-//         version: appConfig.version || '1.0.0'
-//       };
-      
-//       sendToParent(readyMessage);
-      
-//       // Запрашиваем авторизацию через небольшую задержку
-//       setTimeout(() => {
-//         if (!authRequestedRef.current) {
-//           authRequestedRef.current = true;
-//           console.log('🔐 Запрашиваю авторизацию у родителя...');
-//           sendToParent({ 
-//             type: 'CHILD_AUTH_REQUEST',
-//             app: appConfig.id || 'unknown-app'
-//           });
-//         }
-//       }, 300);
-//     } else {
-//       console.log('🖥️ Приложение запущено standalone');
-//       setParentAuthLoading(false);
-//     }
-//   }, [sendToParent]);
-
-//   /**
-//    * Обработка сообщений от родителя
-//    */
-//   useEffect(() => {
-//     if (!isInParent) return;
-
-//     const cleanup = onParentMessage(async (data, origin) => {
-//       console.log('📨 Получено сообщение от родителя:', data.type);
-      
-//       // Обрабатываем токен от родителя
-//       if (data.type === 'PARENT_AUTH_TOKEN') {
-//         try {
-//           setParentAuthLoading(true);
-//           setParentAuthError(null);
-          
-//           console.log('🔑 Получен токен авторизации от родителя');
-          
-//           // Сохраняем данные авторизации
-//           const authInfo = {
-//             user: data.user,
-//             organization: data.organization,
-//             token: data.token,
-//             receivedAt: new Date().toISOString()
-//           };
-          
-//           setAuthData(authInfo);
-          
-//           // Если есть токен, сохраняем его
-//           if (data.token) {
-//             // Сохраняем токен в localStorage для использования в API запросах
-//             localStorage.setItem('auth_token', data.token);
-            
-//             // Устанавливаем токен в заголовки axios/fetch
-//             if (authService.setToken) {
-//               authService.setToken(data.token);
-//             }
-            
-//             // Пытаемся авторизоваться через BFF
-//             try {
-//               const result = await authService.loginViaParent(data.token);
-              
-//               if (result.success) {
-//                 console.log('✅ BFF авторизация успешна');
-//                 // Диспатчим событие с данными от BFF
-//                 window.dispatchEvent(new CustomEvent('auth:login', { 
-//                   detail: { 
-//                     user: result.user || data.user, 
-//                     organization: result.organization || data.organization 
-//                   }
-//                 }));
-//               } else {
-//                 // Если BFF не сработал, используем данные от родителя
-//                 console.log('⚠️ BFF авторизация не удалась, используем данные родителя');
-//                 window.dispatchEvent(new CustomEvent('auth:login', { 
-//                   detail: { 
-//                     user: data.user, 
-//                     organization: data.organization 
-//                   }
-//                 }));
-//               }
-//             } catch (bffError) {
-//               console.warn('BFF авторизация недоступна, используем данные родителя');
-//               window.dispatchEvent(new CustomEvent('auth:login', { 
-//                 detail: { 
-//                   user: data.user, 
-//                   organization: data.organization 
-//                 }
-//               }));
-//             }
-//           } else {
-//             // Если токена нет, но есть данные пользователя
-//             window.dispatchEvent(new CustomEvent('auth:login', { 
-//               detail: { 
-//                 user: data.user, 
-//                 organization: data.organization 
-//               }
-//             }));
-//           }
-          
-//         } catch (error) {
-//           console.error('❌ Ошибка обработки токена от родителя:', error);
-//           setParentAuthError('Ошибка авторизации через родителя');
-//         } finally {
-//           setParentAuthLoading(false);
-//         }
-//       }
-      
-//       // Родитель запрашивает статус
-//       if (data.type === 'PARENT_STATUS_REQUEST') {
-//         sendToParent({ 
-//           type: 'CHILD_STATUS', 
-//           status: 'ready',
-//           app: appConfig.id || 'unknown-app',
-//           hasAuth: !!authData
-//         });
-//       }
-      
-//       // Родитель уведомляет о выходе из системы
-//       if (data.type === 'PARENT_LOGOUT') {
-//         console.log('🚪 Родитель уведомил о выходе из системы');
-//         setAuthData(null);
-//         window.dispatchEvent(new CustomEvent('auth:session-expired'));
-//       }
-//     });
-
-//     return cleanup;
-//   }, [isInParent, sendToParent, onParentMessage, authData]);
-
-//   return {
-//     isInParent,
-//     parentAuthLoading,
-//     parentAuthError,
-//     authData,
-//     isAuthenticated: !!authData?.user
-//   };
-// };
-
 // useParentAuth.js
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSecurePostMessage } from './useSecurePostMessage';
@@ -351,31 +80,44 @@ export const useParentAuth = () => {
           
           console.log('🔑 Получен токен авторизации от родителя');
           
-          // Сохраняем данные авторизации
-          const authInfo = {
-            user: data.user,
-            organization: data.organization,
-            token: data.token,
-            receivedAt: new Date().toISOString()
-          };
+          // // Сохраняем данные авторизации
+          // const authInfo = {
+          //   user: data.user,
+          //   organization: data.organization,
+          //   token: data.token,
+          //   receivedAt: new Date().toISOString()
+          // };
           
-          setAuthData(authInfo);
+          // setAuthData(authInfo);
           
-          // Если есть токен, сохраняем его
-          if (data.token) {
-            console.log('💾 Сохраняю токен:', data.token.substring(0, 20) + '...');
+          // // Если есть токен, сохраняем его
+          // if (data.token) {
+          //   console.log('💾 Сохраняю токен:', data.token.substring(0, 20) + '...');
             
-            // Сохраняем токен в localStorage
-            localStorage.setItem('auth_token', data.token);
+          //   // Сохраняем токен в localStorage
+          //   localStorage.setItem('auth_token', data.token);
             
-            // Устанавливаем куку с токеном
-            document.cookie = `access_token=${data.token}; path=/; max-age=900; SameSite=Lax`;
+          //   // Устанавливаем куку с токеном
+          //   document.cookie = `access_token=${data.token}; path=/; max-age=900; SameSite=Lax`;
             
-            // Устанавливаем токен в заголовки axios/fetch
-            if (authService.setToken) {
-              authService.setToken(data.token);
-            }
+          //   // Устанавливаем токен в заголовки axios/fetch
+          //   if (authService.setToken) {
+          //     authService.setToken(data.token);
+          //   }
+          // }
+
+          // Обмениваем JWT родителя на BFF-сессию
+          const result = await authService.loginViaParent(data.token);
+
+          if (!result.success) {
+            throw new Error('Не удалось создать BFF-сессию');
           }
+
+          setAuthData({
+            user: result.user,
+            organization: result.organization,
+            receivedAt: new Date().toISOString()
+          });
           
           // Диспатчим событие с данными от родителя
           window.dispatchEvent(new CustomEvent('auth:login', { 

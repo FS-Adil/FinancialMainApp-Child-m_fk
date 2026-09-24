@@ -55,7 +55,6 @@ const bffApi = axios.create({
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': import.meta.env.VITE_BFF_API_KEY || 'cost-app-frontend-secret-key-2024',
         'X-Requested-With': 'XMLHttpRequest'
     },
     timeout: 30000

@@ -9,8 +9,10 @@ export default defineConfig(({ mode }) => {
   const parentOrigin = env.VITE_PARENT_ORIGIN;
   const bffUrl = env.VITE_BFF_URL;
 
+  const base = env.VITE_APP_BASE || '/';
+
   return {
-    base: '/pkk/',
+    base,
     plugins: [react()],
     server: {
       port: parseInt(env.VITE_APP_PORT),

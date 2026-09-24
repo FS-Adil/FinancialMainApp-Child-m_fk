@@ -192,7 +192,7 @@ const StockCostTab = () => {
               </Space>
             }
             extra={
-              <Space split="|" size={4}>
+              <Space separator="|" size={4}>
                 <span>
                   <strong>Организация:</strong> {getOrganizationName()}
                 </span>
